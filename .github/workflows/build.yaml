@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload public signing key
         if: ${{ steps.signing.outputs.use-signing == 'true' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: build-public-key
           path: "${{ steps.signing.outputs.public-key-file }}"
@@ -189,7 +189,7 @@ jobs:
           key: ${{ needs.prepare.outputs.package-fullname }}
 
       - name: Upload build output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: build-${{ matrix.builds.arch }}
           path: ./packages/
