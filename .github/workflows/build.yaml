@@ -1,0 +1,196 @@
+# $schema: https://json.schemastore.org/github-workflow.json
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      signing-key-name:
+        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+        required: false
+        type: string
+        default: ""
+      build-arch:
+        description: "The architecture(s) you want to build for (comma-separated)"
+        required: false
+        type: string
+        default: "x86_64"
+    secrets:
+      signing-key:
+        description: "The private key used to sign the built packages (PEM format)"
+        required: false
+
+    outputs:
+      arches:
+        description: "The architectures that were built (JSON array)"
+        value: ${{ jobs.prepare.outputs.arches }}
+      package-name:
+        description: "Package name ('pkg' for 'pkg-1.2.3-r4.apk')"
+        value: ${{ jobs.prepare.outputs.package-name }}
+      package-version:
+        description: "Package version ('1.2.3' for 'pkg-1.2.3-r4.apk')"
+        value: ${{ jobs.prepare.outputs.package-version }}
+      package-epoch:
+        description: "Package epoch ('4' for 'pkg-1.2.3-r4.apk')"
+        value: ${{ jobs.prepare.outputs.package-epoch }}
+      package-fullname:
+        description: "Package fullname ('pkg-1.2.3-r4' for 'pkg-1.2.3-r4.apk')"
+        value: ${{ jobs.prepare.outputs.package-fullname }}
+      package-fullversion:
+        description: "Package fullversion ('1.2.3-r4' for 'pkg-1.2.3-r4.apk')"
+        value: ${{ jobs.prepare.outputs.package-fullversion }}
+      package-distro:
+        description: "Package distro ('wolfi', 'alpine', etc.)"
+        value: ${{ jobs.prepare.outputs.package-distro }}
+
+env:
+  MELANGE_CACHE_DIR: "./.cache/"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+
+    outputs:
+      arches: ${{ steps.build-arches.outputs.arches }}
+      builds: ${{ steps.build-arches.outputs.builds }}
+
+      package-name: ${{ steps.pkg-info.outputs.package-name }}
+      package-version: ${{ steps.pkg-info.outputs.package-version }}
+      package-epoch: ${{ steps.pkg-info.outputs.package-epoch }}
+      package-fullname: ${{ steps.pkg-info.outputs.package-fullname }}
+      package-fullversion: ${{ steps.pkg-info.outputs.package-fullversion }}
+      package-distro: ${{ steps.pkg-info.outputs.package-distro }}
+
+    steps:
+      - name: Prepare build arch parameters
+        id: build-arches
+        shell: bash
+        env:
+          BUILD_ARCH: ${{ inputs.build-arch }}
+        run: |
+          set -euo pipefail
+
+          # Clean up input
+          # - Split on commas
+          # - Remove leading & trailing whitespace
+          # - Make lowercase
+          # - Normalize arch names (apk style)
+          arches_json=$(jq -c -n --arg arches "${BUILD_ARCH}" '
+            $arches |
+            split(",") |
+            map(
+              gsub("^\\s+|\\s+$"; "") |
+              ascii_downcase |
+              {
+                "386": "x86",
+                "amd64": "x86_64",
+                "arm64": "aarch64",
+                "arm": "armhf",
+                "arm/v6": "armhf",
+                "arm/v7": "armv7",
+                "loong64": "loongarch64"
+              }[.] // .
+            )
+          ')
+
+          builds_json=$(jq -c '[.[] | {arch: ., runner: (if . == "aarch64" then "ubuntu-24.04-arm" else "ubuntu-24.04" end)}]' <<< "${arches_json}")
+
+          echo "arches=${arches_json}" >> "${GITHUB_OUTPUT}"
+          echo "builds=${builds_json}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Get package info
+        id: pkg-info
+        uses: rbrownwsws/get-melange-package-info@3bbdcad7aafc515f2aef9e26340dbeafd0fbf84b
+
+      - name: Prepare for signing
+        id: signing
+        shell: bash
+        env:
+          SIGNING_KEY: "${{ secrets.signing-key }}"
+          SIGNING_KEY_NAME: "${{ inputs.signing-key-name }}"
+        run: |
+          set -euo pipefail
+
+          if [[ -n "${SIGNING_KEY:-}" && -z "${SIGNING_KEY_NAME:-}" ]]; then
+            echo "::error::You provided 'secret.signing-key' but did not provide 'input.signing-key-name'" >&2
+            exit 1
+          fi
+
+          if [[ -n "${SIGNING_KEY_NAME:-}" && -z "${SIGNING_KEY:-}" ]]; then
+            echo "::error::You provided 'input.signing-key-name' but did not provide 'secret.signing-key'" >&2
+            exit 1
+          fi
+
+          USE_SIGNING="false"
+          if [[ -n "${SIGNING_KEY:-}" ]]; then
+            USE_SIGNING="true"
+            echo "::notice::This build will be signed with \"${SIGNING_KEY_NAME}\""
+
+            TEMP_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
+            PUB_KEY_FILE="${TEMP_DIR}/${SIGNING_KEY_NAME}.rsa.pub"
+
+            openssl rsa -pubout -outform PEM -out "${PUB_KEY_FILE}" <<<"${SIGNING_KEY}"
+
+            echo "public-key-file=${PUB_KEY_FILE}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice::This build will not be signed"
+          fi
+
+          echo "use-signing=${USE_SIGNING}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload public signing key
+        if: ${{ steps.signing.outputs.use-signing == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: build-public-key
+          path: "${{ steps.signing.outputs.public-key-file }}"
+          retention-days: 1
+
+  build:
+    needs:
+      - prepare
+
+    strategy:
+      matrix:
+        builds: ${{ fromJSON(needs.prepare.outputs.builds) }}
+
+    runs-on: ${{ matrix.builds.runner }}
+
+    steps:
+      - name: Setup melange
+        uses: chainguard-dev/actions/setup-melange@fabe4ed3f66ceb5f8ec86ed7ae6d0c945ca362fb # v1.6.28
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Cache - Restore build deps
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.MELANGE_CACHE_DIR }}
+          key: ${{ needs.prepare.outputs.package-fullname }}
+          restore-keys: |
+            ${{ needs.prepare.outputs.package-name }}-${{ needs.prepare.outputs.package-version }}-
+            ${{ needs.prepare.outputs.package-name }}-
+
+      - name: Build package
+        uses: rbrownwsws/build-melange-package@2d2adeca09cd8e0d2527cf60891b2fb5c178ec0a # master
+        with:
+          build-arch: ${{ matrix.builds.arch }}
+          signing-key: ${{ secrets.signing-key }}
+          signing-key-name: ${{ inputs.signing-key-name }}
+          cache-dir: ${{ env.MELANGE_CACHE_DIR }}
+
+      - name: Cache - Save build deps
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.MELANGE_CACHE_DIR }}
+          key: ${{ needs.prepare.outputs.package-fullname }}
+
+      - name: Upload build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: build-${{ matrix.builds.arch }}
+          path: ./packages/
+          retention-days: 1

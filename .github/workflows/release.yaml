@@ -1,0 +1,299 @@
+# $schema: https://json.schemastore.org/github-workflow.json
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      signing-key-name:
+        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+        required: false
+        type: string
+        default: ""
+      build-arch:
+        description: "The architecture(s) you want to build for (comma-separated)"
+        required: false
+        type: string
+        default: "x86_64"
+      publish-release:
+        description: "Whether to publish the release"
+        required: false
+        type: boolean
+        default: true
+      releaser-app-client-id:
+        description: "The client ID of the app used to create the release"
+        required: true
+        type: string
+    secrets:
+      signing-key:
+        description: "The private key used to sign the built packages (PEM format)"
+        required: false
+      releaser-app-private-key:
+        description: "The private key of the app used to create the release"
+        required: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+    with:
+      build-arch: ${{ inputs.build-arch }}
+      signing-key-name: ${{ inputs.signing-key-name }}
+    secrets:
+      signing-key: ${{ secrets.signing-key }}
+
+  process-build-assets:
+    needs:
+      - build
+
+    strategy:
+      matrix:
+        arch: ${{ fromJSON(needs.build.outputs.arches) }}
+
+    runs-on: ubuntu-24.04
+
+    env:
+      BUILD_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}
+      RELEASE_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}-${{ needs.build.outputs.package-distro }}-${{ matrix.arch }}
+      BUILD_DIR: ${{ github.workspace }}/packages/${{ matrix.arch }}
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: build-${{ matrix.arch }}
+          path: ${{ github.workspace }}/packages/
+
+      - name: Prepare package file
+        id: prepare-package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
+          echo "dist-dir=${DIST_DIR}" >> "${GITHUB_OUTPUT}"
+
+          cp "${BUILD_DIR}/${BUILD_PACKAGE_FILENAME}.apk" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk"
+
+      - name: Prepare melange provenance statement
+        id: prepare-melange-provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
+          echo "dist-dir=${DIST_DIR}" >> "${GITHUB_OUTPUT}"
+
+          DIGEST=$(sha256sum "${BUILD_DIR}/${BUILD_PACKAGE_FILENAME}.apk" | cut -d' ' -f1)
+
+          # The melange build provenance is all messed up so we need to fix it first:
+          # - it uses "type" instead of "_type" (melange bug - wrong according to the spec)
+          # - the subject name will be wrong because we are renaming the package file
+          # - the subject digest is wrong (melange bug - the data checksum instead of the whole file checksum)
+          echo "Extract and fix melange build provenance attestation..."
+          tar xOf "${BUILD_DIR}/${BUILD_PACKAGE_FILENAME}.attest.tar.gz" "${BUILD_PACKAGE_FILENAME}.attestation" \
+          | jq \
+          --arg old_name "${BUILD_PACKAGE_FILENAME}.apk" \
+          --arg new_name "${RELEASE_PACKAGE_FILENAME}.apk" \
+          --arg digest "${DIGEST}" \
+          '
+          # Fix ._type
+          ._type = .type | del(.type)
+
+          | .subject[] |= (
+            if .name == $old_name then
+              # Fix name
+              .name = $new_name
+
+              # Fix digest
+              | .digest.sha256 = $digest
+            else
+              .
+            end)
+          ' \
+          > "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.melange.provenance.json"
+
+      - name: Upload package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: dist-package-${{ matrix.arch }}
+          path: ${{ steps.prepare-package.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk
+          retention-days: 1
+
+      - name: Upload (unsigned) melange build provenance statement
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: provenance-melange-${{ matrix.arch }}
+          path: ${{ steps.prepare-melange-provenance.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.melange.provenance.json
+          retention-days: 1
+
+  attest-provenance-github:
+    needs:
+      - build
+      - process-build-assets
+
+    strategy:
+      matrix:
+        arch: ${{ fromJSON(needs.build.outputs.arches) }}
+
+    runs-on: ubuntu-24.04
+
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+
+    env:
+      RELEASE_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}-${{ needs.build.outputs.package-distro }}-${{ matrix.arch }}
+
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist-package-${{ matrix.arch }}
+          path: ${{ github.workspace }}
+
+      - name: Attest GitHub Actions Workflow build provenance
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        id: attest
+        with:
+          subject-path: "${{ env.RELEASE_PACKAGE_FILENAME }}.apk"
+
+      - name: Prepare provenance bundle
+        id: prepare-bundle
+        shell: bash
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+
+          DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
+          echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
+
+          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.github.provenance.sigstore.json"
+
+      - name: Upload (signed) melange build provenance statement
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: dist-provenance-github-${{ matrix.arch }}
+          path: ${{ steps.prepare-bundle.outputs.dist-dir }}
+          retention-days: 1
+
+  attest-provenance-melange:
+    needs:
+      - build
+      - process-build-assets
+
+    strategy:
+      matrix:
+        arch: ${{ fromJSON(needs.build.outputs.arches) }}
+
+    runs-on: ubuntu-24.04
+
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+
+    env:
+      RELEASE_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}-${{ needs.build.outputs.package-distro }}-${{ matrix.arch }}
+
+    steps:
+      - name: Download (unsigned) melange bulid provenance statement
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: provenance-melange-${{ matrix.arch }}
+          path: ${{ github.workspace }}
+
+      - name: Attest melange build provenance
+        id: attest
+        uses: rbrownwsws/attest-melange-provenance@9bf46d85bdfb2e208a069e457b724b5773c3717e # master
+        with:
+          statement-file: "${{ github.workspace }}/${{ env.RELEASE_PACKAGE_FILENAME }}.melange.provenance.json"
+
+      - name: Prepare provenance bundle
+        id: prepare-bundle
+        shell: bash
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.slsa-provenance-bundle-path }}
+        run: |
+          set -euo pipefail
+
+          DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
+          echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
+
+          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.melange.provenance.sigstore.json"
+
+      - name: Upload (signed) melange build provenance statement
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.2
+        with:
+          name: dist-provenance-melange-${{ matrix.arch }}
+          path: ${{ steps.prepare-bundle.outputs.dist-dir }}
+          retention-days: 1
+
+  publish-release:
+    needs:
+      - build
+      - process-build-assets
+      - attest-provenance-github
+      - attest-provenance-melange
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ inputs.releaser-app-client-id }}
+          private-key: ${{ secrets.releaser-app-private-key }}
+          permission-contents: write
+
+      - name: Create Release
+        id: create-release
+        uses: rbrownwsws/create-release@86c684b3707a42915a13b54bec1e326d3b1a6f2f # master
+        with:
+          tag-name: ${{ needs.build.outputs.package-fullversion }}
+          github-api-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Download signing public keys
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: ${{ github.workspace }}/keys/
+          name: build-public-key
+
+      - name: Add signing public key to release
+        uses: rbrownwsws/upload-release-asset@f1630bc13b7faaffe019c83153225c3e0f256b8d # master
+        with:
+          content-type: 'application/x-pem-file'
+          path: ${{ github.workspace }}/keys/*.pub
+          upload-url: ${{ steps.create-release.outputs.upload-url }}
+          github-api-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: ${{ github.workspace }}/dist/
+          pattern: dist-*
+          merge-multiple: true
+
+      - name: Add packages to release
+        uses: rbrownwsws/upload-release-asset@f1630bc13b7faaffe019c83153225c3e0f256b8d # master
+        with:
+          content-type: 'application/gzip'
+          path: ${{ github.workspace }}/dist/*.apk
+          upload-url: ${{ steps.create-release.outputs.upload-url }}
+          github-api-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Add signed attestation bundles to release
+        uses: rbrownwsws/upload-release-asset@f1630bc13b7faaffe019c83153225c3e0f256b8d # master
+        with:
+          content-type: 'application/vnd.dev.sigstore.bundle.v0.3+json'
+          path: ${{ github.workspace }}/dist/*.sigstore.json
+          upload-url: ${{ steps.create-release.outputs.upload-url }}
+          github-api-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Publish release
+        if: inputs.publish-release
+        uses: rbrownwsws/publish-release@913e33f1f83f36f7a105d838945f130f860ab24d # master
+        with:
+          release-id: ${{ needs.create-release.outputs.release-id }}
+          github-api-token: ${{ steps.app-token.outputs.token }}
