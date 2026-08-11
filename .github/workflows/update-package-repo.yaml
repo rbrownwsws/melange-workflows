@@ -18,9 +18,14 @@ on:
         description: "The private key used to sign the package index (PEM format)"
         required: false
 
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read  # to get packages from Releases
 
     steps:
       - name: Setup melange
@@ -45,8 +50,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      pages: write
-      id-token: write
+      pages: write     # to deploy to Pages
+      id-token: write  # to verify the deployment originates from an appropriate source
 
     environment:
       name: ${{ inputs.environment }}
