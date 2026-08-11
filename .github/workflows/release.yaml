@@ -118,7 +118,7 @@ jobs:
               .
             end)
           ' \
-          > "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.melange.provenance.json"
+          > "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.melange.provenance.json"
 
       - name: Upload package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -131,7 +131,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: provenance-melange-${{ matrix.arch }}
-          path: ${{ steps.prepare-melange-provenance.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.melange.provenance.json
+          path: ${{ steps.prepare-melange-provenance.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk.melange.provenance.json
           retention-days: 1
 
   attest-provenance-github:
@@ -179,7 +179,7 @@ jobs:
           DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
           echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
 
-          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.github.provenance.sigstore.json"
+          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.github.provenance.sigstore.json"
 
       - name: Upload (signed) melange build provenance statement
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -220,7 +220,7 @@ jobs:
         id: attest
         uses: rbrownwsws/attest-melange-provenance@b23255470d55fd02a90b639a30a838524ea44e5b # master
         with:
-          statement-file: "${{ github.workspace }}/${{ env.RELEASE_PACKAGE_FILENAME }}.melange.provenance.json"
+          statement-file: "${{ github.workspace }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk.melange.provenance.json"
 
       - name: Prepare provenance bundle
         id: prepare-bundle
@@ -233,7 +233,7 @@ jobs:
           DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
           echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
 
-          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.melange.provenance.sigstore.json"
+          cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.melange.provenance.sigstore.json"
 
       - name: Upload (signed) melange build provenance statement
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
