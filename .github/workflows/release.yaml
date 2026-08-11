@@ -31,8 +31,15 @@ on:
         description: "The private key of the app used to create the release"
         required: true
 
+permissions: {}
+
 jobs:
   build:
+    name: Build package
+
+    permissions:
+      contents: read  # to check out source to build
+
     uses: ./.github/workflows/build.yaml
     with:
       build-arch: ${{ inputs.build-arch }}
@@ -41,6 +48,8 @@ jobs:
       signing-key: ${{ secrets.signing-key }}
 
   process-build-assets:
+    name: Prepare build assets for distribution
+
     needs:
       - build
 
@@ -126,6 +135,8 @@ jobs:
           retention-days: 1
 
   attest-provenance-github:
+    name: Attest GitHub Workflow build provenance
+
     needs:
       - build
       - process-build-assets
@@ -137,9 +148,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      id-token: write
-      attestations: write
-      artifact-metadata: write
+      id-token: write           # to get ID needed to sign attestation
+      attestations: write       # to store attestation
+      artifact-metadata: write  # to store attestation
 
     env:
       RELEASE_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}-${{ needs.build.outputs.package-distro }}-${{ matrix.arch }}
@@ -178,6 +189,8 @@ jobs:
           retention-days: 1
 
   attest-provenance-melange:
+    name: Attest melange build provenance
+
     needs:
       - build
       - process-build-assets
@@ -189,9 +202,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      id-token: write
-      attestations: write
-      artifact-metadata: write
+      id-token: write           # to get ID needed to sign attestation
+      attestations: write       # to store attestation
+      artifact-metadata: write  # to store attestation
 
     env:
       RELEASE_PACKAGE_FILENAME: ${{ needs.build.outputs.package-fullname }}-${{ needs.build.outputs.package-distro }}-${{ matrix.arch }}
@@ -230,6 +243,8 @@ jobs:
           retention-days: 1
 
   publish-release:
+    name: Create and publish Release
+
     needs:
       - build
       - process-build-assets

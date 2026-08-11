@@ -42,12 +42,19 @@ on:
         description: "Package distro ('wolfi', 'alpine', etc.)"
         value: ${{ jobs.prepare.outputs.package-distro }}
 
+permissions: {}
+
 env:
   MELANGE_CACHE_DIR: "./.cache/"
 
 jobs:
   prepare:
+    name: Prepare to build
+
     runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read  # to check out source for package info
 
     outputs:
       arches: ${{ steps.build-arches.outputs.arches }}
@@ -99,6 +106,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Get package info
         id: pkg-info
@@ -149,8 +158,13 @@ jobs:
           retention-days: 1
 
   build:
+    name: Build package
+
     needs:
       - prepare
+
+    permissions:
+      contents: read  # to check out source to build
 
     strategy:
       matrix:
@@ -164,6 +178,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Cache - Restore build deps
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
