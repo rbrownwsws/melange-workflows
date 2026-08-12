@@ -35,10 +35,15 @@ jobs:
 
       - name: Create package repo
         id: create-repo
-        uses: rbrownwsws/create-melange-package-repo@9a968c859109a9fd8a08ff115f32a51eb3494c22 # master
+        uses: rbrownwsws/create-melange-package-repo@2b7cedcffc83eb7a6f624377292961d27776f555 # master
         with:
           signing-key: ${{ secrets.signing-key }}
           signing-key-name: ${{ inputs.signing-key-name }}
+
+      - name: Create package repo index pages
+        uses: rbrownwsws/create-melange-package-repo-index-pages@456d69b2d850ff0b3880da955d869f64544b2a63 # master
+        with:
+          repo-dir: ${{ steps.create-repo.outputs.repo-dir }}
 
       - name: Upload package repo as artifact
         id: deployment
