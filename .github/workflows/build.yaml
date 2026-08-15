@@ -191,7 +191,7 @@ jobs:
             ${{ needs.prepare.outputs.package-name }}-
 
       - name: Build package
-        uses: rbrownwsws/build-melange-package@1a49843b36534f83d05b1404ecebcfa400c0874e # master
+        uses: rbrownwsws/build-melange-package@5259e8aa574356261e94d413336106231cb6d997 # master
         with:
           build-arch: ${{ matrix.builds.arch }}
           signing-key: ${{ secrets.signing-key }}
