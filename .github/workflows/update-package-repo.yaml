@@ -35,7 +35,7 @@ jobs:
 
       - name: Create package repo
         id: create-repo
-        uses: rbrownwsws/create-melange-package-repo@2b7cedcffc83eb7a6f624377292961d27776f555 # master
+        uses: rbrownwsws/create-melange-package-repo@65adbdabfe2bc330a7c7f8c99daf6b26b297c261 # master
         with:
           signing-key: ${{ secrets.signing-key }}
           signing-key-name: ${{ inputs.signing-key-name }}
