@@ -264,7 +264,7 @@ jobs:
 
       - name: Create Release
         id: create-release
-        uses: rbrownwsws/create-release@86c684b3707a42915a13b54bec1e326d3b1a6f2f # master
+        uses: rbrownwsws/create-release@4ddec3df75933395abf232395a94b8de0c1a84d6 # master
         with:
           tag-name: ${{ needs.build.outputs.package-fullversion }}
           github-api-token: ${{ steps.app-token.outputs.token }}
