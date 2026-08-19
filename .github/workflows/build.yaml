@@ -4,16 +4,21 @@ name: Build
 on:
   workflow_call:
     inputs:
-      signing-key-name:
-        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+      melange-config-file:
+        description: "The path to the melange configuration file"
         required: false
         type: string
-        default: ""
+        default: "melange.yaml"
       build-arch:
         description: "The architecture(s) you want to build for (comma-separated)"
         required: false
         type: string
         default: "x86_64"
+      signing-key-name:
+        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+        required: false
+        type: string
+        default: ""
     secrets:
       signing-key:
         description: "The private key used to sign the built packages (PEM format)"
@@ -111,7 +116,9 @@ jobs:
 
       - name: Get package info
         id: pkg-info
-        uses: rbrownwsws/get-melange-package-info@3bbdcad7aafc515f2aef9e26340dbeafd0fbf84b
+        uses: rbrownwsws/get-melange-package-info@3bbdcad7aafc515f2aef9e26340dbeafd0fbf84b # master
+        with:
+          melange-config-file: ${{ inputs.melange-config-file }}
 
       - name: Prepare for signing
         id: signing
@@ -193,6 +200,7 @@ jobs:
       - name: Build package
         uses: rbrownwsws/build-melange-package@5259e8aa574356261e94d413336106231cb6d997 # master
         with:
+          melange-config-file: ${{ inputs.melange-config-file }}
           build-arch: ${{ matrix.builds.arch }}
           signing-key: ${{ secrets.signing-key }}
           signing-key-name: ${{ inputs.signing-key-name }}
