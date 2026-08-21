@@ -1,0 +1,247 @@
+# $schema: https://json.schemastore.org/github-workflow.json
+
+name: Update Package
+
+on:
+  workflow_call:
+    inputs:
+      melange-config-file:
+        description: "The path to the melange configuration file"
+        required: false
+        type: string
+        default: "melange.yaml"
+      build-arch:
+        description: "The architecture(s) you want to build for (comma-separated)"
+        required: false
+        type: string
+        default: "x86_64"
+      updater-app-client-id:
+        description: "The client ID of the app used to update the package config"
+        required: true
+        type: string
+    secrets:
+      updater-app-private-key:
+        description: "The private key of the app used to update the package config"
+        required: true
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build package
+
+    permissions:
+      contents: read  # to check out source to build
+
+    uses: ./.github/workflows/build.yaml
+    with:
+      melange-config-file: ${{ inputs.melange-config-file }}
+      build-arch: ${{ inputs.build-arch }}
+
+  diff:
+    name: Compare built package to the latest release
+
+    needs:
+      - build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(needs.build.outputs.arches) }}
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: build-${{ matrix.arch }}
+          path: ${{ github.workspace }}/build/
+
+      - name: Get latest release
+        shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+
+          LATEST_DIR="${GITHUB_WORKSPACE}/latest"
+
+          mkdir "${LATEST_DIR}"
+
+          gh release download --repo "${GITHUB_REPOSITORY}" --pattern "*-${ARCH}.apk" --dir "${LATEST_DIR}"
+
+      - name: Find packages to compare
+        id: find-packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          get_pkg() {
+            pkg_dir="${1}"
+
+            shopt -s nullglob
+            shopt -s globstar
+            pkgs=("${pkg_dir}"/**/*.apk)
+            shopt -u nullglob
+            shopt -u globstar
+
+            if (( ${#pkgs[@]} != 1 )); then
+              names=()
+              for pkg in "${pkgs[@]}"; do
+                names+=("${pkg#"${pkg_dir}"}")
+              done
+
+              names_str=$(printf ', "%s"' "${names[@]}")
+              names_str="[${names_str:2}]"
+
+              echo "::error::Expected to find exactly one package in ${pkg_dir} but found ${#pkgs[@]}:" "${names_str}" >&2
+              exit 1
+            fi
+
+            echo "${pkgs[0]}"
+          }
+
+          echo "pkg_latest=$(get_pkg "${GITHUB_WORKSPACE}/latest")" >> "${GITHUB_OUTPUT}"
+          echo "pkg_build=$(get_pkg "${GITHUB_WORKSPACE}/build")" >> "${GITHUB_OUTPUT}"
+
+      - name: Compare packages
+        id: diff
+        uses: rbrownwsws/diff-melange-apk@c2e3e0e1277ef3c5c34900e5a3abcae679226812 # master
+        with:
+          apk1: "${{ steps.find-packages.outputs.pkg_latest }}"
+          apk2: "${{ steps.find-packages.outputs.pkg_build }}"
+
+      - name: Save diff result
+        env:
+          ARCH: ${{ matrix.arch }}
+          CHANGED: ${{ steps.diff.outputs.package_changed }}
+        run: |
+          set -euo pipefail
+
+          echo "${CHANGED}" > "${GITHUB_WORKSPACE}/diff-${ARCH}"
+
+      - name: Upload diff result as artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: ${{ github.workspace }}/diff-${{ matrix.arch }}
+          archive: false
+
+  decide:
+    name: Decide if we need to update
+
+    needs:
+      - diff
+
+    runs-on: ubuntu-24.04
+
+    outputs:
+      do-update: ${{ steps.check.outputs.package-changed }}
+
+    steps:
+      - name: Collect diff results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: diff-*
+          merge-multiple: true
+
+      - name: Check if the package changed for any arches
+        id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          package_changed='false'
+          if grep -rl 'true' "${GITHUB_WORKSPACE}" > /dev/null; then
+            package_changed='true'
+          fi
+
+          echo "package-changed=${package_changed}" >> "${GITHUB_OUTPUT}"
+
+  bump-epoch:
+    name: Bump epoch
+
+    needs:
+      - decide
+
+    if: needs.decide.outputs.do-update == 'true'
+
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Edit epoch
+        shell: bash
+        env:
+          MELANGE_CONFIG_FILE: ${{ inputs.melange-config-file }}
+        run: |
+          set -euo pipefail
+
+          current_epoch=$(sed -n -E 's/^[[:space:]]*epoch:[[:space:]]*([0-9]+).*$/\1/p' "${MELANGE_CONFIG_FILE}")
+
+          new_epoch=$((current_epoch + 1))
+
+          sed -i -E "s/^([[:space:]]*)epoch:[[:space:]]*[0-9]+(.*)\$/\1epoch: ${new_epoch}\2/" "${MELANGE_CONFIG_FILE}"
+
+          git add "${MELANGE_CONFIG_FILE}"
+
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ inputs.updater-app-client-id }}
+          private-key: ${{ secrets.updater-app-private-key }}
+          permission-contents: write
+
+      - name: Commit updated lockfile
+        id: commit
+        uses: rbrownwsws/commit-signed-by-github-app@b786d7622324cf7ce38fbfde34a278fd2b0660d8 # master
+        with:
+          commit-message: "chore(deps): bump epoch"
+          github-api-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Get package info
+        id: pkg-info
+        uses: rbrownwsws/get-melange-package-info@3bbdcad7aafc515f2aef9e26340dbeafd0fbf84b # master
+        with:
+          melange-config-file: ${{ inputs.melange-config-file }}
+
+      - name: Create tag
+        shell: bash
+        env:
+          COMMIT_OID: ${{ steps.commit.outputs.commit-oid }}
+          TAG_NAME: ${{ steps.pkg-info.outputs.package-fullversion }}
+          GITHUB_API_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          API_HEADERS=(
+            --header "Accept: application/vnd.github+json"
+            --header "Authorization: Bearer ${GITHUB_API_TOKEN}"
+            --header "X-GitHub-Api-Version: 2026-03-10"
+          )
+
+          PAYLOAD=$(jq \
+            --null-input \
+            --compact-output \
+            --arg ref "refs/tags/${TAG_NAME}" \
+            --arg oid "${COMMIT_OID}" \
+            '{ref: $ref, sha: $oid}')
+
+          curl \
+            --silent \
+            --show-error \
+            --fail-with-body \
+            "${API_HEADERS[@]}" \
+            --header "Content-Type: application/json" \
+            --request POST \
+            --data "${PAYLOAD}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/git/refs" \
+            > /dev/null

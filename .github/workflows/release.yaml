@@ -4,16 +4,21 @@ name: Release
 on:
   workflow_call:
     inputs:
-      signing-key-name:
-        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+      melange-config-file:
+        description: "The path to the melange configuration file"
         required: false
         type: string
-        default: ""
+        default: "melange.yaml"
       build-arch:
         description: "The architecture(s) you want to build for (comma-separated)"
         required: false
         type: string
         default: "x86_64"
+      signing-key-name:
+        description: "The name of the key used to sign the built packages (not including the .rsa/.rsa.pub suffix)"
+        required: false
+        type: string
+        default: ""
       publish-release:
         description: "Whether to publish the release"
         required: false
@@ -42,6 +47,7 @@ jobs:
 
     uses: ./.github/workflows/build.yaml
     with:
+      melange-config-file: ${{ inputs.melange-config-file }}
       build-arch: ${{ inputs.build-arch }}
       signing-key-name: ${{ inputs.signing-key-name }}
     secrets:
@@ -177,7 +183,7 @@ jobs:
           set -euo pipefail
 
           DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
-          echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
+          echo "dist-dir=${DIST_DIR}" >> "${GITHUB_OUTPUT}"
 
           cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.github.provenance.sigstore.json"
 
@@ -231,7 +237,7 @@ jobs:
           set -euo pipefail
 
           DIST_DIR=$(mktemp -d --tmpdir="${RUNNER_TEMP}")
-          echo "dist-dir=${DIST_DIR}" >> $GITHUB_OUTPUT
+          echo "dist-dir=${DIST_DIR}" >> "${GITHUB_OUTPUT}"
 
           cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.melange.provenance.sigstore.json"
 
@@ -310,5 +316,5 @@ jobs:
         if: inputs.publish-release
         uses: rbrownwsws/publish-release@95b92dc859b6ac08b9f7d99dc00816ce30045e10 # master
         with:
-          release-id: ${{ needs.create-release.outputs.release-id }}
+          release-id: ${{ steps.create-release.outputs.release-id }}
           github-api-token: ${{ steps.app-token.outputs.token }}
