@@ -174,7 +174,7 @@ jobs:
 
     steps:
       - name: Setup melange
-        uses: rbrownwsws/setup-melange@867cb568e9d02fa1097bb3f0ed1c1dc293e1f4a7 # master
+        uses: rbrownwsws/setup-melange@7bbe6a2ac345248521d13c5d0ab1c0c821839ce8 # master
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
