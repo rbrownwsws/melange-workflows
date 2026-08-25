@@ -116,7 +116,7 @@ jobs:
 
       - name: Get package info
         id: pkg-info
-        uses: rbrownwsws/get-melange-package-info@f161046ba1c079162d65913cd459aa0df6ece1e8 # master
+        uses: rbrownwsws/get-melange-package-info@058e4ae7c06ada84dbbf918d3cc5fdae1f6cdee7 # master
         with:
           melange-config-file: ${{ inputs.melange-config-file }}
 
