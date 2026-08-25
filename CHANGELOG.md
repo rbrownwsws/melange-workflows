@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.2](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.1...v1.0.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* **deps:** Update rbrownwsws/attest-melange-provenance to v1.0.0 ([da48510](https://github.com/rbrownwsws/melange-workflows/commit/da485107550ac0f5c164a6c59bd344317f708a2d))
+* **deps:** Update rbrownwsws/build-melange-package to v1.0.0 ([06d83db](https://github.com/rbrownwsws/melange-workflows/commit/06d83db6085562ea6babc06a1063ad5d3b6595f0))
+* **deps:** Update rbrownwsws/commit-signed-by-github-app to v1.0.0 ([cb6f7d6](https://github.com/rbrownwsws/melange-workflows/commit/cb6f7d630f75e8275dda7a0f1c563fa4149c1de1))
+* **deps:** Update rbrownwsws/create-melange-package-repo to v1.0.0 ([2e1d1a8](https://github.com/rbrownwsws/melange-workflows/commit/2e1d1a823c9e0eab0d7934ffecf48a5427bbd986))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.1 ([#37](https://github.com/rbrownwsws/melange-workflows/issues/37)) ([c5ba782](https://github.com/rbrownwsws/melange-workflows/commit/c5ba782f4c88beb6bf89f77e304ce89e2784184c))
+* **deps:** Update rbrownwsws/create-melange-package-repo-index-pages to v1.0.0 ([1cee5cd](https://github.com/rbrownwsws/melange-workflows/commit/1cee5cd3e4a58ef0996f4f0c14be36737b4c2cb9))
+* **deps:** Update rbrownwsws/create-release to v1.0.0 ([50d2ef9](https://github.com/rbrownwsws/melange-workflows/commit/50d2ef9684ea2d3b763031c07b867eb3836e2e1d))
+* **deps:** Update rbrownwsws/diff-melange-apk to v1.0.0 ([db776ea](https://github.com/rbrownwsws/melange-workflows/commit/db776eaac71dc734bb265fb5de740af5ee910d86))
+* **deps:** Update rbrownwsws/get-melange-package-info to v1.0.0 ([e2f2ef2](https://github.com/rbrownwsws/melange-workflows/commit/e2f2ef29b59972aeb9f632638330dbdea4a3e111))
+* **deps:** Update rbrownwsws/get-melange-package-info to v1.0.0 ([73259ad](https://github.com/rbrownwsws/melange-workflows/commit/73259ad9c9bc3082c4da1910465af75a534c6aa2))
+* **deps:** Update rbrownwsws/publish-release to v1.0.0 ([b72eb9c](https://github.com/rbrownwsws/melange-workflows/commit/b72eb9ccf1d0cda542d53d263102e36515cc3cfa))
+* **deps:** Update rbrownwsws/upload-release-asset to v1.0.0 ([1a6fbf3](https://github.com/rbrownwsws/melange-workflows/commit/1a6fbf33abb5e168b831ce2483795581bfd32ed4))
+
 ## [1.0.1](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.0...v1.0.1) (2026-08-25)
 
 
