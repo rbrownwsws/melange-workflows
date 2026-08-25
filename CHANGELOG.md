@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.0...v1.0.1) (2026-08-25)
+
+
+### Miscellaneous Chores
+
+* release 1.0.1 ([01295d7](https://github.com/rbrownwsws/melange-workflows/commit/01295d742dd43f136f5fb2dda98fb97e0badedb1))
+
 ## 1.0.0 (2026-08-24)
 
 
