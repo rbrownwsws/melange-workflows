@@ -282,7 +282,7 @@ jobs:
           name: build-public-key
 
       - name: Add signing public key to release
-        uses: rbrownwsws/upload-release-asset@ddda4881a9c64d4772ad27cc15c0bc513b1d5e93 # master
+        uses: rbrownwsws/upload-release-asset@0944b6a70ce972a5c62eac854a69a582573cc934 # v1.0.0
         with:
           content-type: 'application/x-pem-file'
           path: ${{ github.workspace }}/keys/*.pub
@@ -297,7 +297,7 @@ jobs:
           merge-multiple: true
 
       - name: Add packages to release
-        uses: rbrownwsws/upload-release-asset@ddda4881a9c64d4772ad27cc15c0bc513b1d5e93 # master
+        uses: rbrownwsws/upload-release-asset@0944b6a70ce972a5c62eac854a69a582573cc934 # v1.0.0
         with:
           content-type: 'application/gzip'
           path: ${{ github.workspace }}/dist/*.apk
@@ -305,7 +305,7 @@ jobs:
           github-api-token: ${{ steps.app-token.outputs.token }}
 
       - name: Add signed attestation bundles to release
-        uses: rbrownwsws/upload-release-asset@ddda4881a9c64d4772ad27cc15c0bc513b1d5e93 # master
+        uses: rbrownwsws/upload-release-asset@0944b6a70ce972a5c62eac854a69a582573cc934 # v1.0.0
         with:
           content-type: 'application/vnd.dev.sigstore.bundle.v0.3+json'
           path: ${{ github.workspace }}/dist/*.sigstore.json
