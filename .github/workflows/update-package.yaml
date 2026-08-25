@@ -202,7 +202,7 @@ jobs:
 
       - name: Commit updated lockfile
         id: commit
-        uses: rbrownwsws/commit-signed-by-github-app@efd1da0a5aa9f290a9e3da0603f4e6e53b52617f # master
+        uses: rbrownwsws/commit-signed-by-github-app@cf21dafcef7d9619d81dbda09e0c65e8bd45dbdb # v1.0.0
         with:
           commit-message: "chore(deps): bump epoch"
           github-api-token: ${{ steps.app-token.outputs.token }}
