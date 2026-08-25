@@ -224,7 +224,7 @@ jobs:
 
       - name: Attest melange build provenance
         id: attest
-        uses: rbrownwsws/attest-melange-provenance@518a10e3c766c9ef80a8ce3e028c6a8ff54ce341 # master
+        uses: rbrownwsws/attest-melange-provenance@c36f78f86a45b4a7a4ae9eade023becb04f997da # v1.0.0
         with:
           statement-file: "${{ github.workspace }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk.melange.provenance.json"
 
