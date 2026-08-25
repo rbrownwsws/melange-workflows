@@ -314,7 +314,7 @@ jobs:
 
       - name: Publish release
         if: inputs.publish-release
-        uses: rbrownwsws/publish-release@95b92dc859b6ac08b9f7d99dc00816ce30045e10 # master
+        uses: rbrownwsws/publish-release@3b6cbf9aecfa7f148209520fe4d63dfc5cfb2ce7 # master
         with:
           release-id: ${{ steps.create-release.outputs.release-id }}
           github-api-token: ${{ steps.app-token.outputs.token }}
