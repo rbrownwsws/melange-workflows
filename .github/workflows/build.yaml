@@ -198,7 +198,7 @@ jobs:
             ${{ needs.prepare.outputs.package-name }}-
 
       - name: Build package
-        uses: rbrownwsws/build-melange-package@5259e8aa574356261e94d413336106231cb6d997 # master
+        uses: rbrownwsws/build-melange-package@81215b42cf7795634478233c7b5afa579ea7f3ed # master
         with:
           melange-config-file: ${{ inputs.melange-config-file }}
           build-arch: ${{ matrix.builds.arch }}
