@@ -1,23 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices"
-  ],
-  "semanticCommits": "enabled",
-  "packageRules": [
-    {
-      "description": "Reusable workflow deps need to bump version",
-      "matchFileNames": [
-        ".github/workflows/*"
-      ],
-      "semanticCommitType": "fix"
-    },
-    {
-      "description": "Workflows starting with _ are just for this repo",
-      "matchFileNames": [
-        ".github/workflows/_*"
-      ],
-      "semanticCommitType": "ci"
-    }
+    "github>rbrownwsws/renovate-config:workflows"
   ]
 }
