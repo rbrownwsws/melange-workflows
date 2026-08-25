@@ -3,6 +3,7 @@
   "extends": [
     "config:best-practices"
   ],
+  "semanticCommits": "enabled",
   "packageRules": [
     {
       "description": "Reusable workflow deps need to bump version",
