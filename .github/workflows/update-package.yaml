@@ -107,7 +107,7 @@ jobs:
 
       - name: Compare packages
         id: diff
-        uses: rbrownwsws/diff-melange-apk@fb7758dca050799fea5d5a9d45e2ddae04e9eda4 # v1.0.0
+        uses: rbrownwsws/diff-melange-apk@458130c91d543a70ee7a29c83cebf2a94fdaa023 # v1.0.1
         with:
           apk1: "${{ steps.find-packages.outputs.pkg_latest }}"
           apk2: "${{ steps.find-packages.outputs.pkg_build }}"
