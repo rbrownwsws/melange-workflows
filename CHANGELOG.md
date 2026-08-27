@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.2...v1.0.3) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.0.1 ([#38](https://github.com/rbrownwsws/melange-workflows/issues/38)) ([53c9640](https://github.com/rbrownwsws/melange-workflows/commit/53c9640910fdcbd90ec086d08f010621f845dec7))
+
 ## [1.0.2](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.1...v1.0.2) (2026-08-25)
 
 
