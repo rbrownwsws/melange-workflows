@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.3...v1.0.4) (2026-08-28)
+
+
+### Bug Fixes
+
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.2 ([#40](https://github.com/rbrownwsws/melange-workflows/issues/40)) ([5c726b0](https://github.com/rbrownwsws/melange-workflows/commit/5c726b08598fdbf1252f6f7b69ae03d2059ecd88))
+
 ## [1.0.3](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.2...v1.0.3) (2026-08-27)
 
 
