@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.7](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.6...v1.0.7) (2026-09-02)
+
+
+### Bug Fixes
+
+* **deps:** update actions/deploy-pages action to v5.0.1 ([#47](https://github.com/rbrownwsws/melange-workflows/issues/47)) ([462600d](https://github.com/rbrownwsws/melange-workflows/commit/462600d4a943893f4631532ea889ba663f909a2d))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.4 ([#49](https://github.com/rbrownwsws/melange-workflows/issues/49)) ([3593e60](https://github.com/rbrownwsws/melange-workflows/commit/3593e604b6bff5b46c42fb95f8db41531bcd2a87))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.1 ([#50](https://github.com/rbrownwsws/melange-workflows/issues/50)) ([bd27de2](https://github.com/rbrownwsws/melange-workflows/commit/bd27de2bd17243a3bd58f2c399fbbd943d1d90b8))
+
 ## [1.0.6](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.5...v1.0.6) (2026-09-01)
 
 
