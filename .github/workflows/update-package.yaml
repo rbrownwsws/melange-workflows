@@ -111,6 +111,7 @@ jobs:
         with:
           apk1: "${{ steps.find-packages.outputs.pkg_latest }}"
           apk2: "${{ steps.find-packages.outputs.pkg_build }}"
+          show-summary: "true"
 
       - name: Save diff result
         env:
