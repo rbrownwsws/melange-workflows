@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.7...v1.0.8) (2026-09-03)
+
+
+### Bug Fixes
+
+* show diff summary in update-package workflow ([#51](https://github.com/rbrownwsws/melange-workflows/issues/51)) ([94842f4](https://github.com/rbrownwsws/melange-workflows/commit/94842f4860a73c7cd0c27bf58b46db0d29efbb13))
+
 ## [1.0.7](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.6...v1.0.7) (2026-09-02)
 
 
