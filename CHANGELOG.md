@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.8...v1.0.9) (2026-09-03)
+
+
+### Bug Fixes
+
+* **deps:** update rbrownwsws/setup-melange action to v1.0.3 ([#53](https://github.com/rbrownwsws/melange-workflows/issues/53)) ([06a478c](https://github.com/rbrownwsws/melange-workflows/commit/06a478c8466e06e6ce830817bf765422352c64ff))
+
 ## [1.0.8](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.7...v1.0.8) (2026-09-03)
 
 
