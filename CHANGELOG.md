@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.10](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.9...v1.0.10) (2026-09-18)
+
+
+### Bug Fixes
+
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.5 ([#55](https://github.com/rbrownwsws/melange-workflows/issues/55)) ([e05030f](https://github.com/rbrownwsws/melange-workflows/commit/e05030f6283ce3109f6d8a228b44a1feb8f422a9))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.6 ([#60](https://github.com/rbrownwsws/melange-workflows/issues/60)) ([48c5991](https://github.com/rbrownwsws/melange-workflows/commit/48c59914e921380c9fa83fd68e117e76ff4849c2))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.7 ([#63](https://github.com/rbrownwsws/melange-workflows/issues/63)) ([963c086](https://github.com/rbrownwsws/melange-workflows/commit/963c0864f3bcff1f4c06fefef0b442bf3e158efa))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.8 ([#64](https://github.com/rbrownwsws/melange-workflows/issues/64)) ([9536b82](https://github.com/rbrownwsws/melange-workflows/commit/9536b8206c3317ccd531466648d327552b924116))
+* **deps:** update rbrownwsws/create-melange-package-repo-index-pages action to v1.0.9 ([#66](https://github.com/rbrownwsws/melange-workflows/issues/66)) ([3f08ae1](https://github.com/rbrownwsws/melange-workflows/commit/3f08ae195fcc6f88dee332bf393923e2f1d31631))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.2 ([#56](https://github.com/rbrownwsws/melange-workflows/issues/56)) ([b4bf3de](https://github.com/rbrownwsws/melange-workflows/commit/b4bf3de5e65c2a73e2faa7eb1e6f56a85a312b51))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.3 ([#61](https://github.com/rbrownwsws/melange-workflows/issues/61)) ([e82870d](https://github.com/rbrownwsws/melange-workflows/commit/e82870d98327b334adb8c3211ab6dfdd4baeec8e))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.4 ([#62](https://github.com/rbrownwsws/melange-workflows/issues/62)) ([55ece55](https://github.com/rbrownwsws/melange-workflows/commit/55ece556800dc7741e615671c9027c6eb9d3e16d))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.5 ([#65](https://github.com/rbrownwsws/melange-workflows/issues/65)) ([b6f21d3](https://github.com/rbrownwsws/melange-workflows/commit/b6f21d33e9fe70d47114719f82a69b85f05a1c8e))
+* **deps:** update rbrownwsws/diff-melange-apk action to v1.1.6 ([#67](https://github.com/rbrownwsws/melange-workflows/issues/67)) ([b6a6020](https://github.com/rbrownwsws/melange-workflows/commit/b6a602052c79ef41e87fbb6c9afb7ac82de97786))
+* **deps:** update rbrownwsws/setup-melange action to v1.0.4 ([#58](https://github.com/rbrownwsws/melange-workflows/issues/58)) ([bd80e90](https://github.com/rbrownwsws/melange-workflows/commit/bd80e90aa961f8458502de71de2b9939587f8d21))
+* **deps:** update rbrownwsws/setup-melange action to v1.2.0 ([#68](https://github.com/rbrownwsws/melange-workflows/issues/68)) ([9e06fa1](https://github.com/rbrownwsws/melange-workflows/commit/9e06fa14abd2021e2946a929684086bd2ef523bd))
+* pass gh GITHUB_TOKEN so it doesn't get rate-limited ([ca2f4b1](https://github.com/rbrownwsws/melange-workflows/commit/ca2f4b1a638e2269525b1693ef84e0f428b31101))
+
 ## [1.0.9](https://github.com/rbrownwsws/melange-workflows/compare/v1.0.8...v1.0.9) (2026-09-03)
 
 
