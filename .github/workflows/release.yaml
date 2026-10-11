@@ -127,14 +127,14 @@ jobs:
           > "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.melange.provenance.json"
 
       - name: Upload package
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist-package-${{ matrix.arch }}
           path: ${{ steps.prepare-package.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk
           retention-days: 1
 
       - name: Upload (unsigned) melange build provenance statement
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: provenance-melange-${{ matrix.arch }}
           path: ${{ steps.prepare-melange-provenance.outputs.dist-dir }}/${{ env.RELEASE_PACKAGE_FILENAME }}.apk.melange.provenance.json
@@ -188,7 +188,7 @@ jobs:
           cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.github.provenance.sigstore.json"
 
       - name: Upload (signed) melange build provenance statement
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist-provenance-github-${{ matrix.arch }}
           path: ${{ steps.prepare-bundle.outputs.dist-dir }}
@@ -242,7 +242,7 @@ jobs:
           cp "${BUNDLE_PATH}" "${DIST_DIR}/${RELEASE_PACKAGE_FILENAME}.apk.melange.provenance.sigstore.json"
 
       - name: Upload (signed) melange build provenance statement
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist-provenance-melange-${{ matrix.arch }}
           path: ${{ steps.prepare-bundle.outputs.dist-dir }}
