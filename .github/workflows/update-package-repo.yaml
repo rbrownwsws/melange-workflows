@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Setup melange
-        uses: rbrownwsws/setup-melange@80158fcdd2f14a8065d7b9cfb9f6e341c60ccfb9 # v1.4.0
+        uses: rbrownwsws/setup-melange@54cb70b0ca07ba85ba78bda0f132170f190736e8 # v1.5.0
 
       - name: Create package repo
         id: create-repo
