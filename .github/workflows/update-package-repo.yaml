@@ -41,7 +41,7 @@ jobs:
           signing-key-name: ${{ inputs.signing-key-name }}
 
       - name: Create package repo index pages
-        uses: rbrownwsws/create-melange-package-repo-index-pages@0c7848f26635a54fd607f6a756c888fd844fc6b4 # v1.0.17
+        uses: rbrownwsws/create-melange-package-repo-index-pages@19fb36deb83d22323d412d8eb370b776ec1a0161 # v1.0.18
         with:
           repo-dir: ${{ steps.create-repo.outputs.repo-dir }}
 
